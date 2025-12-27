@@ -127,7 +127,7 @@ export const AboutSection = () => {
             </div>
 
             {/* Counters */}
-            <div className="grid grid-cols-3 gap-4 pt-6">
+            <div className="grid grid-cols-3 gap-2 pt-6">
               {counters.map((counter, index) => (
                 <motion.div
                   key={counter.label}
@@ -138,13 +138,13 @@ export const AboutSection = () => {
                   className="bg-card rounded-2xl p-4 text-center shadow-card border border-border group cursor-pointer"
                 >
                   <motion.div 
-                    className={`w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br ${counter.color} flex items-center justify-center`}
+                    className={`w-16 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br ${counter.color} flex items-center justify-center`}
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
                   >
                     <counter.icon className="w-6 h-6 text-white" />
                   </motion.div>
-                  <div className="text-2xl md:text-3xl font-bold text-primary">
+                  <div className="text-xl md:text-3xl font-bold text-primary">
                     <Counter value={counter.value} suffix={counter.suffix} />
                   </div>
                   <div className="text-xs md:text-sm text-muted-foreground mt-1">

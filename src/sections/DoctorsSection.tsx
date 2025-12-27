@@ -126,7 +126,7 @@ export const DoctorsSection = () => {
         </motion.div>
 
         {/* Doctors Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {doctorsToShow.map((doctor, index) => (
             <motion.div
               key={doctor.id}
@@ -138,7 +138,7 @@ export const DoctorsSection = () => {
               <img
                 src={getDoctorImage(doctor)}
                 alt={doctor.name || "Doctor"}
-                className="w-full h-40 object-cover object-top rounded-2xl"
+                className="w-full h-40 object-cover object-top rounded-3xl"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(

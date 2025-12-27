@@ -48,12 +48,12 @@ export const Header = () => {
             <img
               src={logo}
               alt="EH Hospital Logo"
-              className="w-auto h-20 pl-8 opacity-100"
+              className="w-auto h-16 opacity-100"
             />
           </a>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-5">
             {navItems.map((item) => (
               <a
                 key={item.label}
