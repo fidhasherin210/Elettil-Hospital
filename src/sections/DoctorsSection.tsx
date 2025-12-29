@@ -1,15 +1,14 @@
 import { motion } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/supabaseClient";
 
-// Local images imports
+/* Local images */
 import jabiraImg from "@/assets/docters/dr.Jabira Habeeb.png";
 import SalumolImg from "@/assets/docters/dr.Salumol S.png";
 import BobithamolImage from "@/assets/docters/dr.Bobithamol.png";
 import AlikunhiImg from "@/assets/docters/dr.Alikunhi.png";
 
-// Local images map
 const localImages: Record<string, any> = {
   "Dr. Jabira Habeeb": jabiraImg,
   "Dr. Salumol S": SalumolImg,
@@ -18,46 +17,53 @@ const localImages: Record<string, any> = {
 };
 
 export const DoctorsSection = () => {
-  const [doctors, setDoctors] = useState([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
+  const [filteredDoctors, setFilteredDoctors] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [activeDepartment, setActiveDepartment] = useState("All");
   const [showAll, setShowAll] = useState(false);
   const [initialCount, setInitialCount] = useState(4);
   const [loading, setLoading] = useState(true);
 
-  // Fetch doctors from Supabase
+  /* Fetch Doctors */
   const fetchDoctors = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("doctors")
-        .select("*")
-        .eq("is_active", true)
-        .order("order_index", { ascending: true });
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("doctors")
+      .select("*")
+      .eq("is_active", true)
+      .order("order_index", { ascending: true });
 
-      if (error) {
-        console.error("Supabase error:", error);
-        setDoctors(getLocalDoctorsData());
-        return;
-      }
+    const finalData =
+      !error && data?.length
+        ? data.map((d) => ({ ...d, name: d.name?.trim() || "Doctor" }))
+        : getLocalDoctorsData();
 
-      if (!data || data.length === 0) {
-        setDoctors(getLocalDoctorsData());
-      } else {
-        // Ensure each doctor has a name
-        const formatted = data.map((d) => ({
-          ...d,
-          name: d.name?.trim() || "Unknown Doctor",
-        }));
-        setDoctors(formatted);
-      }
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setDoctors(getLocalDoctorsData());
-    } finally {
-      setLoading(false);
-    }
+    setDoctors(finalData);
+    setFilteredDoctors(finalData);
+    extractDepartments(finalData);
+    setLoading(false);
   };
 
-  // Fallback local data
+  /* Extract departments */
+  const extractDepartments = (data: any[]) => {
+    const set = new Set<string>(["All"]);
+    data.forEach((d) => d.specialization && set.add(d.specialization));
+    setDepartments(Array.from(set));
+  };
+
+  /* Filter */
+  const filterByDepartment = (dept: string) => {
+    setActiveDepartment(dept);
+    setFilteredDoctors(
+      dept === "All"
+        ? doctors
+        : doctors.filter((d) => d.specialization === dept)
+    );
+    setShowAll(false);
+  };
+
+  /* Fallback local doctors */
   const getLocalDoctorsData = () => [
     { id: 1, name: "Dr. Jabira Habeeb", specialization: "Gynaecology", education: "MBBS, DNB (OBG)" },
     { id: 2, name: "Dr. Salumol S", specialization: "Gynaecology", education: "MBBS, DGO, DNB (OBG)" },
@@ -69,35 +75,36 @@ export const DoctorsSection = () => {
     fetchDoctors();
   }, []);
 
-  // Responsive initial count
+  /* Responsive count */
   useEffect(() => {
-    const updateCount = () => {
+    const update = () => {
       if (window.innerWidth >= 1024) setInitialCount(4);
       else if (window.innerWidth >= 768) setInitialCount(3);
       else setInitialCount(2);
     };
-    updateCount();
-    window.addEventListener("resize", updateCount);
-    return () => window.removeEventListener("resize", updateCount);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
-  // Get image for doctor (Supabase or local fallback)
-  const getDoctorImage = (doctor) => {
-    const name = doctor.name?.trim() || "Doctor";
-    if (doctor.image && doctor.image.trim() !== "") return doctor.image;
-    if (localImages[name]) return localImages[name];
-    return `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(name)}`;
+  /* Image resolver */
+  const getDoctorImage = (doctor: any) => {
+    if (doctor.image) return doctor.image;
+    if (localImages[doctor.name]) return localImages[doctor.name];
+    return `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(
+      doctor.name
+    )}`;
   };
 
-  const doctorsToShow = showAll ? doctors : doctors.slice(0, initialCount);
+  const doctorsToShow = showAll
+    ? filteredDoctors
+    : filteredDoctors.slice(0, initialCount);
 
   if (loading) {
     return (
-      <section className="py-16 bg-muted/30">
-        <div className="text-center">
-          <div className="animate-spin h-10 w-10 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading doctors...</p>
-        </div>
+      <section className="py-16 text-center">
+        <div className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto" />
+        <p className="mt-3 text-sm">Loading doctors...</p>
       </section>
     );
   }
@@ -105,16 +112,16 @@ export const DoctorsSection = () => {
   return (
     <section id="doctors" className="py-16 bg-muted/30">
       <div className="container mx-auto">
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-10"
         >
-          <div className="inline-flex items-center gap-2 mb-3">
+          <div className="inline-flex items-center gap-2 mb-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-primary font-semibold uppercase tracking-wider text-sm">
+            <span className="text-primary text-sm font-semibold uppercase">
               Meet our doctors
             </span>
             <Sparkles className="w-5 h-5 text-primary" />
@@ -123,9 +130,28 @@ export const DoctorsSection = () => {
           <h2 className="text-2xl md:text-3xl font-bold">
             World-Class <span className="text-gradient">Medical Experts</span>
           </h2>
+
+          {/* Filter Bar */}
+          {departments.length > 1 && (
+            <div className="flex flex-wrap justify-center gap-2 mt-6">
+              {departments.map((dept) => (
+                <button
+                  key={dept}
+                  onClick={() => filterByDepartment(dept)}
+                  className={`px-4 py-1.5 rounded-full text-sm transition ${
+                    activeDepartment === dept
+                      ? "bg-primary text-white"
+                      : "bg-white border hover:text-primary"
+                  }`}
+                >
+                  {dept}
+                </button>
+              ))}
+            </div>
+          )}
         </motion.div>
 
-        {/* Doctors Grid */}
+        {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {doctorsToShow.map((doctor, index) => (
             <motion.div
@@ -133,36 +159,38 @@ export const DoctorsSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="bg-card rounded-3xl shadow-lg overflow-hidden"
+              className="bg-white rounded-2xl shadow hover:shadow-lg overflow-hidden"
             >
+              {/* ✅ RESPONSIVE IMAGE HEIGHT */}
               <img
                 src={getDoctorImage(doctor)}
-                alt={doctor.name || "Doctor"}
-                className="w-full h-40 object-cover object-top rounded-3xl"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = `https://ui-avatars.com/api/?background=random&color=fff&name=${encodeURIComponent(
-                    doctor.name || "Doctor"
-                  )}`;
-                }}
+                alt={doctor.name}
+                className="w-full h-28 sm:h-32 md:h-40 object-cover object-top"
               />
-              <div className="p-4 text-center">
-                <h3 className="font-bold text-lg">{doctor.name || "Unknown Doctor"}</h3>
-                <p className="text-primary text-sm">{doctor.specialization || "General"}</p>
-                <p className="text-muted-foreground text-xs mt-1">{doctor.education || "Education info not available"}</p>
+
+              <div className="p-3 text-center">
+                <h3 className="font-semibold text-sm md:text-base">
+                  {doctor.name}
+                </h3>
+                <p className="text-primary text-xs md:text-sm">
+                  {doctor.specialization}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {doctor.education}
+                </p>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Show More / Less Button */}
-        {doctors.length > initialCount && (
-          <div className="text-center mt-6">
+        {/* Show More */}
+        {filteredDoctors.length > initialCount && (
+          <div className="text-center mt-8">
             <button
               onClick={() => setShowAll(!showAll)}
-              className="px-5 py-2 border border-primary text-primary rounded-full"
+              className="px-6 py-2 border rounded-full text-primary hover:bg-primary hover:text-white transition"
             >
-              {showAll ? "Show Less" : `View All Doctors (${doctors.length})`}
+              {showAll ? "Show Less" : "View All Doctors"}
             </button>
           </div>
         )}
