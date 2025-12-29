@@ -93,7 +93,7 @@ export const AboutSection = () => {
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8 }}
-            className="space-y-6"
+            className="space-y-3"
           >
             <div className="space-y-4">
               <motion.div
@@ -135,7 +135,7 @@ export const AboutSection = () => {
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: 0.2 + index * 0.1, duration: 0.5 }}
                   whileHover={{ scale: 1.05, y: -3 }}
-                  className="bg-card rounded-2xl p-4 text-center shadow-card border border-border group cursor-pointer"
+                  className="bg-card rounded-2xl p-2 text-center shadow-card border border-border group cursor-pointer"
                 >
                   <motion.div 
                     className={`w-16 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br ${counter.color} flex items-center justify-center`}
